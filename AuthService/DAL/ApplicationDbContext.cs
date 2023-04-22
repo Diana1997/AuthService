@@ -8,7 +8,6 @@ namespace AuthService.DAL
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-            
         }
         
     }
