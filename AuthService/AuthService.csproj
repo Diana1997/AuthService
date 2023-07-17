@@ -13,6 +13,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="MediatR" Version="12.1.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.17" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.17" />
         <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.9" />
@@ -36,12 +37,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="BL" />
+      <Compile Remove="DAL\Migrations\20230422084726_InitialCreate.cs" />
+      <Compile Remove="DAL\Migrations\20230422084726_InitialCreate.Designer.cs" />
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="DAL\Migrations\20230422084726_InitialCreate.cs" />
-      <Compile Remove="DAL\Migrations\20230422084726_InitialCreate.Designer.cs" />
+      <Folder Include="BL\Commands" />
     </ItemGroup>
 
     <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">

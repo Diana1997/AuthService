@@ -1,10 +1,15 @@
 using System;
+using System.Reflection;
 using System.Text;
 using AuthService.DAL;
+using AuthService.DAL.Models;
+using AuthService.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +37,8 @@ namespace AuthService
         {
             services.ConfigureDal(Configuration);
             
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+            
             services.AddControllers();
 
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -56,11 +63,12 @@ namespace AuthService
                         (Encoding.UTF8.GetBytes(Configuration["Jwt:Key"])),
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidateLifetime = false,
+                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true
                 };
             });
 
+            services.AddScoped<ITokenBuilder, TokenBuilder>();
             services.AddAuthorization();
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/dist"; });
         }
@@ -86,6 +94,13 @@ namespace AuthService
                 app.UseSpaStaticFiles();
             }
 
+            
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+                ApplicationDbContextSeeder.SeedData(userManager).GetAwaiter().GetResult();
+            }
+            
             app.UseRouting();
 
             app.UseAuthentication();
@@ -100,9 +115,6 @@ namespace AuthService
 
             app.UseSpa(spa =>
             {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
-
                 spa.Options.SourcePath = "ClientApp";
 
                 if (env.IsDevelopment())

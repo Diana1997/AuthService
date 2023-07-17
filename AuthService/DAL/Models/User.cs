@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
+using Microsoft.AspNetCore.Identity;
 
 namespace AuthService.DAL.Models
 {
@@ -6,5 +7,6 @@ namespace AuthService.DAL.Models
     {
         public string Firstname { set; get; }
         public string Lastname { set; get; }
+        public DateTime CreationTime { set; get; }
     }
 }
