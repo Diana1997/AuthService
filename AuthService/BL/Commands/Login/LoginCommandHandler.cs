@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using AuthService.BL.Responses;
@@ -32,7 +33,13 @@ namespace AuthService.BL.Commands.Login
             }
             
             var user = await _signInManager.UserManager.FindByNameAsync(request.Username);
-            var accessToken = _tokenBuilder.GenerateToken(user);
+
+            var clams = new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id)
+            };
+            
+            var accessToken = _tokenBuilder.GenerateAccessToken(clams);
             
             var loginResponse = new LoginResponse
             {

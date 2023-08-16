@@ -1,9 +1,10 @@
-﻿using AuthService.DAL.Models;
+﻿using System.Security.Claims;
+using AuthService.DAL.Models;
 
 namespace AuthService.Services
 {
     public interface ITokenBuilder
     {
-        string GenerateToken(User user);
+        string GenerateAccessToken(Claim[] clams);
     }
 }

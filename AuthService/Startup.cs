@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using AuthService.DAL;
@@ -16,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace AuthService
 {
@@ -41,12 +43,56 @@ namespace AuthService
             
             services.AddControllers();
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo {Title = "Your API", Version = "v1"});
+                // Configure Swagger to use JWT Bearer Token authentication
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
+            
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"), 
                     builder =>    builder.MigrationsAssembly(typeof(AppContext).Assembly.FullName)
                 ));
             
             services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
+
+            services.AddIdentity<User, IdentityRole>(options =>
+                {
+                    /*options.Password.RequireDigit = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireNonAlphanumeric = true;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequiredLength = 8;
+
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.AllowedForNewUsers = true;
+
+                    options.User.RequireUniqueEmail = true;*/
+                })
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+
             
             services.AddAuthentication(options =>
             {
@@ -70,6 +116,8 @@ namespace AuthService
 
             services.AddScoped<ITokenBuilder, TokenBuilder>();
             services.AddAuthorization();
+
+
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/dist"; });
         }
 
@@ -101,6 +149,15 @@ namespace AuthService
                 ApplicationDbContextSeeder.SeedData(userManager).GetAwaiter().GetResult();
             }
             
+            
+            app.UseSwagger();  
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V2");  
+                c.RoutePrefix = "api";
+            });
+
+            
             app.UseRouting();
 
             app.UseAuthentication();
@@ -113,6 +170,7 @@ namespace AuthService
                     pattern: "{controller}/{action=Index}/{id?}");
             });
 
+          
             app.UseSpa(spa =>
             {
                 spa.Options.SourcePath = "ClientApp";
